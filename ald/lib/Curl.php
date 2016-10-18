@@ -42,18 +42,26 @@ class Ald_Lib_Curl{
             if(isset($server['retry'])){
                 $retry = $server['retry'];
             }
-            curl_setopt($ch, CURLOPT_URL, $url);
             if(self::METHOD_POST === $method){
                 curl_setopt($ch, CURLOPT_POST, 1);
                 $_data = $data;
                 if(is_array($data)){
                     $_data = http_build_query($_data);
                 }
-                curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
+                curl_setopt($ch, CURLOPT_POSTFIELDS, $_data);
+            }elseif(self::METHOD_GET === $method){
+                if(is_array($data)){
+                    if(false !== strpos($url, '?')){
+                        $url .= rtrim($url, '&') . '&' . http_build_query($data);
+                    }else{
+                        $url .= '?' . http_build_query($data);
+                    }
+                }
             }
             if(!empty($headers)){
                 curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
             }
+            curl_setopt($ch, CURLOPT_URL, $url);
             curl_setopt($ch, CURLOPT_TIMEOUT, $timeout);
             curl_setopt($ch, CURLOPT_HEADER, 0);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
@@ -84,14 +92,22 @@ class Ald_Lib_Curl{
      */
     public static function fetch($url, $method = self::METHOD_GET, $data = '', $headers = null, $timeout = 8){
         $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $url);
         if(self::METHOD_POST === $method){
             curl_setopt($ch, CURLOPT_POST, 1);
             if(is_array($data)){
                 $data = http_build_query($data);
             }
             curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
+        }elseif(self::METHOD_GET === $method){
+            if(is_array($data)){
+                if(false !== strpos($url, '?')){
+                    $url .= rtrim($url, '&') . '&' . http_build_query($data);
+                }else{
+                    $url .= '?' . http_build_query($data);
+                }
+            }
         }
+        curl_setopt($ch, CURLOPT_URL, $url);
         if(!empty($headers)){
             curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
         }
